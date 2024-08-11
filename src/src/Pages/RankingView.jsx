@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
 
 const RankingView = () => {
-  return (
-    <div>RankingView</div>
-  )
-}
+  return <div>RankingView</div>;
+};
 
-export default RankingView
+export default RankingView;

@@ -1,9 +1,7 @@
-import React from 'react'
+import React from "react";
 
 const UserView = () => {
-  return (
-    <div>UserView</div>
-  )
-}
+  return <div>UserView</div>;
+};
 
-export default UserView
+export default UserView;
