@@ -64,15 +64,15 @@ import { useParams, Link } from "react-router-dom";
 
 const Challanges = [
   {
-      title: 'Challange 1',
-      description: 'Hello World'
-, id : 1 
-      
-}
+      title: 'Challenge 1',
+      description: 'Hello World',
+      id : 1 
+  }
 ]
 function getChallanges(id) {
   return Challanges;
 }
+
 
 function getChallange(id) {
   console.log(id);
@@ -87,8 +87,8 @@ const EventChallengesView = () => {
     <Container>
       <Row>
         <Col>
-          <Card>
-            <Card.Header>Header {eventId}</Card.Header>
+          <Card className="mt-2">
+            <Card.Header>Event {eventId}</Card.Header>
             <Card.Body>
               {allChallanges.map((challenge, index) => (
                 <Link
@@ -102,16 +102,16 @@ const EventChallengesView = () => {
                       getChallange(challenge["id"]);
                     }}
                   >
-                    <Col className="p-1 col-3">
-                      <Card className="p-2" style={{ textAlign: "center" }}>
+                    <Row className="p-1">
+                      <Card className="p-2 m-2" style={{ textAlign: "center" }}>
                         {challenge["title"]}
                       </Card>
-                    </Col>
-                    <Col className="p-1">
-                      <Card className="p-2" style={{ textAlign: "center" }}>
+                    </Row>
+                    <Row className="p-1">
+                      <Card className="p-2 m-2" style={{ textAlign: "center" }}>
                         {challenge["description"]}
                       </Card>
-                    </Col>
+                    </Row>
                   </Row>
                 </Link>
               ))}
