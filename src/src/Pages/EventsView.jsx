@@ -74,8 +74,7 @@ const EventsView = () => {
     <Container>
       <Row>
         <Col>
-          <Card>
-            <Card.Header>Header</Card.Header>
+          <Card className="mt-2">
             <Card.Body>
               {Events.map((event, index) => (
                 <>
@@ -87,16 +86,16 @@ const EventsView = () => {
                     }}
                   >
                     <Link to={`/event/${event["id"]}`} style={{textDecoration:'none'}}>
-                      <Col className="p-1 col-3">
+                      <Row className="p-1">
                         <Card className="p-2" style={{ textAlign: "center" }}>
                           {event["title"]}
                         </Card>
-                      </Col>
-                      <Col className="p-1">
+                      </Row>
+                      <Row className="p-1">
                         <Card className="p-2" style={{ textAlign: "center" }}>
                           {event["description"]}
                         </Card>
-                      </Col>
+                      </Row>
                     </Link>
                   </Row>
                 </>
