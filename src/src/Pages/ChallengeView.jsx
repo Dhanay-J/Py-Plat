@@ -2,6 +2,15 @@ import React, { useEffect, useState, useCallback } from "react";
 import { Container, Row, Col, Card, Form, Button } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
+import { loader } from "@monaco-editor/react";
+import * as monaco from "monaco-editor"
+import { useRef } from "react";
+
+loader.config({ monaco });
+
+import { IP, PORT } from "../settings.json";
+
+
 
 function getChallenge(eventId, challengeId) {
   if (eventId === "1" && challengeId === "1") {
@@ -19,6 +28,40 @@ function getChallenge(eventId, challengeId) {
         functionArgs: [],
       },
     };
+  }
+  if (eventId === "1" && challengeId === "2") {
+    return {
+      title: "Challenge 2",
+      description: "Do any python code !",
+      inputF: "None",
+      outputF: "None",
+      testCases: [{ input: "", output: "Any" }],
+      defaultCode: "",
+      testCode: {
+        // User Uses Print Statement
+        usePrint: true,
+        function: "",
+        functionArgs: [],
+      },
+    };
+    
+  }
+  if (eventId === "1" && challengeId === "3") {
+    return {
+      title: "Challenge 3",
+      description: "Do any python code !",
+      inputF: "None",
+      outputF: "None",
+      testCases: [{ input: "", output: "Any" }],
+      defaultCode: "",
+      testCode: {
+        // User Uses Print Statement
+        usePrint: true,
+        function: "",
+        functionArgs: [],
+      },
+    };
+    
   }
 
   return {
@@ -46,15 +89,14 @@ function getChallenge(eventId, challengeId) {
 
 const ChallengeView = () => {
   const { eventId, challengeId } = useParams();
-
   const [challenge, setChallenge] = useState(null);
   const [userCode, setUserCode] = useState("    ");
   const [result, setResult] = useState("");
-  let testSnippet = "";
+  const editorRef = useRef(null);
 
   const fetchResult = async (code) => {
     try {
-      const response = await fetch("http://localhost:2000/api/v2/execute", {
+      const response = await fetch(`http://${IP}:${PORT}/api/v2/execute`, {
         method: "POST",
         headers: {
           "Content-Length": `${code.length}`,
@@ -78,25 +120,59 @@ const ChallengeView = () => {
       return error.toString();
     }
   };
+
   
-  const runTest = useCallback(async () => {
+  
+  const runTest = useCallback(async (code=userCode) => {
+    if (challenge === null) {
+      return { status: false, message: "Challenge not found" };
+    }
+
+    if (challenge.testCases[0].output==="Any") {
+      const result = await fetchResult(code);
+      setResult(result); // Update the state for UI purposes
+      return { status: true, message: "All test cases passed" };
+    }
+
     for (let i = 0; i < challenge["testCases"].length; i++) {
       const test = challenge["testCases"][i];
-      let codeToRun = userCode;
+      let codeToRun = code;
       if (!challenge["testCode"]["usePrint"]) {
-        codeToRun = userCode + `\nprint(solution(${test.input}))`;
+        codeToRun = code + `\nprint(solution(${test.input}))`;
       }
       const result = await fetchResult(codeToRun);
       setResult(result); // Update the state for UI purposes
       if (result.trim() !== test.output) {
         document.getElementsByClassName(`test_${i}`)[0].style.backgroundColor = "red";
+        if(result.trim()===""){
+          setResult("<No Output>")
+        }
         return { status: false, message: `Test case ${i + 1} failed` };
       } else {
+
         document.getElementsByClassName(`test_${i}`)[0].style.backgroundColor = "green";
+        
       }
     }
     return { status: true, message: "All test cases passed" };
   }, [userCode, challenge]);
+
+
+  const handleEditorDidMount = useCallback((editor, monaco) => {
+    editorRef.current = editor;
+  
+    editor.addCommand(monaco.KeyMod.Shift | monaco.KeyCode.Enter, async function() {
+      const currentCode = editor.getValue();
+      await runTest(currentCode);
+    });
+  
+    editor.onKeyDown(function(e) {
+      if (e.keyCode === monaco.KeyCode.Enter && e.shiftKey) {
+        e.preventDefault();
+      }
+    });
+  }, [runTest]);
+
 
   useEffect(() => {
     setChallenge(getChallenge(eventId, challengeId));
@@ -108,28 +184,29 @@ const ChallengeView = () => {
         <Col>
           {challenge !== null ? (
             <div>
-              <Card>
+              <Card className="mt-2">
                 <Card.Header>{challenge.title}</Card.Header>
                 <Card.Body>
-                  <Card className="m-2 p-2">
+                  <Card className="m-2 p-2" key={"desc"}>
                     Description : {challenge.description}
                   </Card>
-                  <Card className="m-2 p-2">
+                  <Card className="m-2 p-2" key={"inputF"}>
                     Input Format : {challenge.inputF}
                   </Card>
-                  <Card className="m-2 p-2">
-                    Output Format : {challenge.outputF}
+                  <Card className="m-2 p-2" key={"outputF"}>
+                    Expected Output Format : {challenge.outputF}
                   </Card>
                 </Card.Body>
 
-                <div className="Editor p-1 border m-2 rounded">
+                <div className="Editor p-1 border m-2 rounded" key={"editor"}>
                   <Editor
-                    height="30vh"
+                    height="25vh"
                     defaultLanguage="python"
                     defaultValue={challenge.defaultCode}
                     onChange={(value) => {
                       setUserCode(value);
                     }}
+                    onMount={handleEditorDidMount}
                   />
                 </div>
                 <Button
@@ -144,17 +221,19 @@ const ChallengeView = () => {
 
                 <Card.Body>
                   {challenge["testCases"].map((test, index) => (
-                    <Card className="m-2 p-2">
+                    <Card className="m-2 p-2" key={"I/O"}>
                       <Col>
                         <Row className="m-2">
                           {test.input ? <Col>Input : {test.input}</Col> : ''}
-                          <Col>Output : {test.output}</Col>
+                          <Col>Test Case Output : {test.output}</Col>
                         </Row>
                       </Col>
 
                       <Col>
+                        <Row className='border rounded m-2' style={{backgroundColor:'#1e9ae0'}}>
+                          <Col className="col rounded p-2 me-2" >Your Output</Col>
+                        </Row>
                         <Row className='border p-2 rounded m-2'>
-                          <Col className="col-4 rounded p-2 me-2" style={{backgroundColor:'#1e9ae0'}}>Your Output</Col>
                           <Col className={`rounded p-2 test_${index}`}>{result}</Col>
                         </Row>
                       </Col>
